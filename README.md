@@ -12,7 +12,7 @@ npm install
 node server.js
 ```
 
-Then visit [http://local.rustcult.com/](http://local.rustcult.com/) to open the app
+Then visit [http://local.rustcult.com:8080/](http://local.rustcult.com:8080/) to open the app
 
 ### Contributing
 
