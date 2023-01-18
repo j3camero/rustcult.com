@@ -16,7 +16,7 @@ Then visit [http://local.rustcult.com/](http://local.rustcult.com/) to open the 
 
 ### Contributing
 
-This project is accepting Pull Requests. For feature ideas see Issues. Join the [Discord](https://discord.gg/rustgov).
+This project accepts Pull Requests. For feature ideas see Issues. Join the [Discord](https://discord.gg/rustgov).
 
 ### Laser Images
 
