@@ -102,3 +102,6 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Ignore package-lock.json for now as it is OK to auto-generate it.
+package-lock.json

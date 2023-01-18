@@ -1,0 +1,23 @@
+{
+  "name": "rustcult.com",
+  "version": "3.0.0",
+  "description": "Sacred texts of a sky-based religious cult in the video game Rust",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/j3camero/rustcult.com.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/j3camero/rustcult.com/issues"
+  },
+  "homepage": "https://github.com/j3camero/rustcult.com#readme",
+  "dependencies": {
+    "canvas": "^2.11.0",
+    "random-seed": "^0.3.0"
+  }
+}
