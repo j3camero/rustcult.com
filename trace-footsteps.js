@@ -116,6 +116,16 @@ function Shuffle(a) {
     return a;
 }
 
+// Draw a line onto the canvas.
+function DrawLine(x1, y1, x2, y2, color) {
+    const [r, g, b] = color;
+    ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+}
+
 // Can't use Math.sign(x) because Math.sign(0) === 0.
 const sgn = x => x < 0 ? -1 : 1;
 
