@@ -1,0 +1,31 @@
+* {
+    padding: 0;
+    margin: 0;
+    border: 0;
+}
+
+body {
+    overflow: hidden;
+}
+
+#mapcanvas {
+    width: 100%;
+    height: 100%;
+}
+
+#menu {
+    position: absolute;
+    left: 16px;
+    top: 16px;
+}
+
+.menubutton {
+    opacity: 0.5;
+    width: 64px;
+}
+
+#fullscreen {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+}

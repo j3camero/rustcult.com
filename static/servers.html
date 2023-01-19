@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Rust+ Map</title>
+    <meta name="viewport" content="initial-scale=1">
+  </head>
+  <body>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QFW71XJ8MX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-QFW71XJ8MX');
+    </script>
+    <p>The map app is in alpha release. Features will change rapidly. Thank you for testing and reporting bugs.</p>
+    <h3>Paired Servers</h3>
+    <ul id="pairedservers">
+      <li>Loading paired servers...</li>
+    </ul>
+    <h3>Pair a Server</h3>
+    <ul>
+      <li>Open
+	<a href="https://companion-rust.facepunch.com/login" target="_blank">the Rust+ login page</a>
+      </li>
+      <li>Login using Steam</li>
+      <li>Ignore the popup message</li>
+      <li>Right-click and click View Page Source</li>
+      <li>Select All &amp; Copy</li>
+      <li>Return to this page and Paste into the text box below</li>
+    </ul>
+    <p>
+    <textarea name="PastePageSourceHere" id="PastePageSourceHere"></textarea>
+    <p id="ServerPairingStatus">No pairing request underway.</p>
+    <p><a href="/logout">Logout</a></p>
+    <script src="servers.js"></script>
+  </body>
+</html>
