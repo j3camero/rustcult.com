@@ -11,7 +11,7 @@ const mapCanvas = document.getElementById('mapcanvas');
 const mapContext = mapCanvas.getContext('2d');
 
 function hover(element) {
-    element.setAttribute('src', '/Hamburger-Icon--Transparent.png');
+    element.setAttribute('src', '/Hamburger-Icon-Green-Transparent.png');
 }
 
 function unhover(element) {
