@@ -105,3 +105,6 @@ dist
 
 # Ignore package-lock.json for now as it is OK to auto-generate it.
 package-lock.json
+
+# Emacs temp files
+*~
