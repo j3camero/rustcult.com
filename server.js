@@ -9,4 +9,4 @@ app.get('/', (req, res) => {
 
 app.use(express.static('static'));
 
-app.listen(port, () => console.log(`Server listening on port: ${PORT}`));
+app.listen(port, () => console.log(`Server listening on port: ${port}`));
