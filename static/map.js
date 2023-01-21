@@ -335,7 +335,6 @@ async function setupTransforms (ctx) {
     mapCanvas.addEventListener('DOMMouseScroll', handleScroll, false);
     mapCanvas.addEventListener('mousewheel', handleScroll, false);
 }
-await setupTransforms(mapContext);
 
 async function Main() {
     const response = await fetch('/mapdata');
