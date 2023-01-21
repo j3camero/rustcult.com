@@ -347,7 +347,8 @@ async function Main() {
     await Sleep(100);
     OnResize();
     await PeriodicUpdateForDotsData();
-    await DoFrame();await setupTransforms(mapContext);
+    await DoFrame();
+    await setupTransforms(mapContext);
 }
 
 Main();
