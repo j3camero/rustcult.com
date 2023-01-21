@@ -4,6 +4,8 @@ let cachedDots;
 let cachedDotsTime;
 let previousCachedDots;
 let previousCachedDotsTime;
+// Controls how fast you zoom in and out. Higher is faster.
+const SCALE_FACTOR = 1.1;
 
 const fullScreenButton = document.getElementById('fullscreenbutton');
 const fullScreenImg = document.getElementById('fullscreenimg');
@@ -206,6 +208,135 @@ async function DoFrame() {
     setTimeout(DoFrame, 10);
 }
 
+async function trackTransforms(ctx){
+	const svg = document.createElementNS("http://www.w3.org/2000/svg",'svg');
+	let SVGMatrix = svg.createSVGMatrix();
+	ctx.getTransform = function(){ return SVGMatrix; };
+
+	const savedTransforms = [];
+	const save = ctx.save;
+	ctx.save = function(){
+		savedTransforms.push(SVGMatrix.translate(0,0));
+		return save.call(ctx);
+	};
+
+	const restore = ctx.restore;
+	ctx.restore = function(){
+		SVGMatrix = savedTransforms.pop();
+		return restore.call(ctx);
+	};
+
+	const scale = ctx.scale;
+	ctx.scale = function(sx,sy){
+		SVGMatrix = SVGMatrix.scaleNonUniform(sx,sy);
+		return scale.call(ctx,sx,sy);
+	};
+
+	const rotate = ctx.rotate;
+	ctx.rotate = function(radians){
+		SVGMatrix = SVGMatrix.rotate(radians*180/Math.PI);
+		return rotate.call(ctx,radians);
+	};
+
+	const translate = ctx.translate;
+	ctx.translate = function(dx,dy){
+		SVGMatrix = SVGMatrix.translate(dx,dy);
+		return translate.call(ctx,dx,dy);
+	};
+
+	const transform = ctx.transform;
+	ctx.transform = function(a,b,c,d,e,f){
+		const m2 = svg.createSVGMatrix();
+		m2.a=a; m2.b=b; m2.c=c; m2.d=d; m2.e=e; m2.f=f;
+		SVGMatrix = SVGMatrix.multiply(m2);
+		return transform.call(ctx,a,b,c,d,e,f);
+	};
+
+	const setTransform = ctx.setTransform;
+	ctx.setTransform = function(a,b,c,d,e,f){
+		SVGMatrix.a = a;
+		SVGMatrix.b = b;
+		SVGMatrix.c = c;
+		SVGMatrix.d = d;
+		SVGMatrix.e = e;
+		SVGMatrix.f = f;
+		return setTransform.call(ctx,a,b,c,d,e,f);
+	};
+
+	const pt = svg.createSVGPoint();
+	ctx.transformedPoint = function(x,y){
+		pt.x=x; pt.y=y;
+		return pt.matrixTransform(SVGMatrix.inverse());
+	}
+}
+
+function redrawWithTransform(){
+
+	// Clear the entire canvas
+	const topLeft = mapContext.transformedPoint(0,0);
+	const bottomRight = mapContext.transformedPoint(mapCanvas.width,mapCanvas.height);
+	mapContext.fillStyle = cachedMapData.map.background;
+	mapContext.fillRect(topLeft.x,topLeft.y,bottomRight.x-topLeft.x,bottomRight.y-topLeft.y);
+
+	mapContext.save();
+	mapContext.setTransform(1,0,0,1,0,0);
+	mapContext.fillRect(0,0,mapCanvas.width,mapCanvas.height);
+	mapContext.restore();
+
+	mapContext.drawImage(mapCanvas,0,0);
+	Draw();
+}
+
+async function setupTransforms (ctx) {
+	await trackTransforms(ctx);
+
+	let lastX = mapCanvas.width / 2, lastY = mapCanvas.height / 2;
+	let dragStart, dragged;
+
+	mapCanvas.addEventListener('mousedown', function (evt) {
+		document.body.style.mozUserSelect = document.body.style.webkitUserSelect = document.body.style.userSelect = 'none';
+		lastX = evt.offsetX || (evt.pageX - mapCanvas.offsetLeft);
+		lastY = evt.offsetY || (evt.pageY - mapCanvas.offsetTop);
+		dragStart = mapContext.transformedPoint(lastX, lastY);
+		dragged = false;
+	}, false);
+
+	mapCanvas.addEventListener('mousemove', function (evt) {
+		lastX = evt.offsetX || (evt.pageX - mapCanvas.offsetLeft);
+		lastY = evt.offsetY || (evt.pageY - mapCanvas.offsetTop);
+		dragged = true;
+		if (dragStart) {
+			const pt = mapContext.transformedPoint(lastX, lastY);
+			mapContext.translate(pt.x - dragStart.x, pt.y - dragStart.y);
+			redrawWithTransform();
+		}
+	}, false);
+
+	mapCanvas.addEventListener('mouseup', function (evt) {
+		dragStart = null;
+		if (!dragged) zoom(evt.shiftKey ? -1 : 1);
+	}, false);
+
+	const zoom = function (clicks) {
+		const pt = mapContext.transformedPoint(lastX, lastY);
+		mapContext.translate(pt.x, pt.y);
+		const factor = Math.pow(SCALE_FACTOR, clicks);
+		mapContext.scale(factor, factor);
+		mapContext.translate(-pt.x, -pt.y);
+		redrawWithTransform();
+	}
+
+	const handleScroll = function (evt) {
+		const delta = evt.wheelDelta ? evt.wheelDelta / 40 : evt.detail ? -evt.detail : 0;
+		if (delta) zoom(delta);
+		return evt.preventDefault() && false;
+	};
+
+	mapCanvas.addEventListener('DOMMouseScroll', handleScroll, false);
+	mapCanvas.addEventListener('mousewheel', handleScroll, false);
+}
+await setupTransforms(mapContext);
+
 async function Main() {
     const response = await fetch('/mapdata');
     const mapData = await response.json();
@@ -216,7 +347,8 @@ async function Main() {
     await Sleep(100);
     OnResize();
     await PeriodicUpdateForDotsData();
-    await DoFrame();
+    await DoFrame()
+	await setupTransforms(mapContext);
 }
 
 Main();
