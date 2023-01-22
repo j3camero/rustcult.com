@@ -10,12 +10,13 @@ pageSourceTextBox.addEventListener('input', async (event) => {
     }
     const pageSource = pageSourceTextBox.value;
     const serverPairingRequest = { pageSource };
-    const response = await fetch('/pair', {
-	method: 'post',
-	headers: {
-	    'Content-Type': 'application/json',
-	},
-	body: JSON.stringify(serverPairingRequest),
+    const response = await fetch('https://rustcult.com/pair', {
+      body: JSON.stringify(serverPairingRequest),
+      credentials: 'include',
+    	headers: {
+    	  'Content-Type': 'application/json',
+    	},
+      method: 'post',
     });
     const jsonResponse = await response.json();
     UpdateStatusLabel(jsonResponse);
@@ -33,12 +34,13 @@ setInterval(async () => {
     }
     // Call the /pair endpoint with no options to get a status update.
     const emptyRequest = {};
-    const response = await fetch('/pair', {
-	method: 'post',
-	headers: {
-	    'Content-Type': 'application/json',
-	},
-	body: JSON.stringify(emptyRequest),
+    const response = await fetch('https://rustcult.com/pair', {
+      body: JSON.stringify(emptyRequest),
+      credentials: 'include',
+    	headers: {
+    	    'Content-Type': 'application/json',
+    	},
+      method: 'post',
     });
     const jsonResponse = await response.json();
     UpdateStatusLabel(jsonResponse);
@@ -62,7 +64,9 @@ function UpdateStatusLabel(jsonResponse) {
 }
 
 async function UpdatePairedServerList() {
-    const response = await fetch('/pairedservers');
+    const response = await fetch('https://rustcult.com/pairedservers', {
+      credentials: 'include',
+    });
     const jsonResponse = await response.json();
     const servers = jsonResponse.servers;
     const ul = document.getElementById('pairedservers');
@@ -74,7 +78,7 @@ async function UpdatePairedServerList() {
     } else {
 	for (const server of servers) {
 	    const a = document.createElement('a');
-	    a.href = `/selectserver?host=${server.host}&port=${server.port}`;
+	    a.href = `https://rustcult.com/selectserver?host=${server.host}&port=${server.port}`;
 	    a.innerHTML = server.name;
 	    const li = document.createElement('li');
 	    li.appendChild(a);

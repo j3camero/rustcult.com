@@ -191,7 +191,9 @@ function OnResize() {
 window.addEventListener('resize', OnResize, false);
 
 async function FetchDots() {
-    const response = await fetch('/dots');
+    const response = await fetch('https://rustcult.com/dots', {
+      credentials: 'include',
+    });
     cachedDots = await response.json();
     previousCachedDots = cachedDots;
     previousCachedDotsTime = cachedDotsTime;
@@ -337,7 +339,9 @@ async function setupTransforms (ctx) {
 }
 
 async function Main() {
-    const response = await fetch('/mapdata');
+    const response = await fetch('https://rustcult.com/mapdata', {
+      credentials: 'include',
+    });
     const mapData = await response.json();
     cachedMapData = mapData;
     await Sleep(100);
