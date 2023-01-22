@@ -1,21 +1,31 @@
 // This script renders a map of player movements over long periods of time.
 // Its purpose is artistic.
-
 const { createCanvas, loadImage } = require('canvas');
-const fs = require('fs');
+const fs = require("fs");
+const { parse } = require("csv-parse");
 const RandomSeed = require('random-seed');
 
 // Put your player movement data here into this list, sorted by player then time.
+const csvfile = "Data.csv"
 const footprints = [];
 
 // This SQL is no longer used by the script but gives you an idea how to sort the data.
-const sql = 'SELECT * FROM PlayerPositions ORDER BY UserIncrementingId, Timestamp';
+// const sql = 'SELECT * FROM PlayerPositions ORDER BY UserIncrementingId, Timestamp';
 
 // The edges of the image are detected in PopulateEdges().
-let minX = 999999;
-let maxX = -999999;
-let minY = 999999;
-let maxY = -999999;
+// let minX = 999999;
+// let maxX = -999999;
+// let minY = 999999;
+// let maxY = -999999;
+
+const Cords = calculateMinMax({ x: 2742, y: 1159 }, 50)
+
+console.log(Cords);
+
+let minX = Cords.minX;
+let maxX = Cords.maxX;
+let minY = Cords.minY;
+let maxY = Cords.maxY;
 
 // Random seed for reproducibility of images. This affects the sorting
 // of the random rainbow colors. Changing the seed will make the same
@@ -34,16 +44,27 @@ const userIds = [];
 const alpha = '0.125';
 let canvas, ctx;
 
+
+function calculateMinMax(cods, size) {
+    return {
+        minX: cods.x - size,
+        maxX: cods.x + size,
+        minY: cods.y - size,
+        maxY: cods.y + size
+    };
+}
+
 // Find the edges of the image and count the number of distinct players.
 function PopulateEdges(footprints) {
     console.log('Finding the edges of the image and counting how many distinct players.');
     for (const row of footprints) {
 	const x = row.x;
 	const y = row.y;
-	minX = Math.min(x, minX);
-	minY = Math.min(y, minY);
-	maxX = Math.max(x, maxX);
-	maxY = Math.max(y, maxY);
+    // Commented for the use of calculateMinMax.
+	// minX = Math.min(x, minX);
+	// minY = Math.min(y, minY);
+	// maxX = Math.max(x, maxX);
+	// maxY = Math.max(y, maxY);
 	players[row.user_incrementing_id] = 1;
     }
     console.log(`Found ${Object.keys(players).length} distinct players.`);
@@ -116,7 +137,7 @@ function Shuffle(a) {
     return a;
 }
 
-// Draw a line onto the canvas.
+// Draws The Line
 function DrawLine(x1, y1, x2, y2, color) {
     const [r, g, b] = color;
     ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
@@ -157,7 +178,7 @@ function Retrace(footprints) {
 	    const dy = row.y - prev.y;
 	    const dist = Math.sqrt(dx * dx + dy * dy);
 	    if (dist < 30) {
-		DrawLine(
+            DrawLine(
 		    canvas.width * (prev.x - minX) / (maxX - minX),
 		    canvas.height * (maxY - prev.y) / (maxY - minY),
 		    canvas.width * (row.x - minX) / (maxX - minX),
@@ -170,9 +191,31 @@ function Retrace(footprints) {
     }
 }
 
-function Main() {
+function newMain() {
+    return new Promise((resolve, reject) => {
+        fs.createReadStream(csvfile)
+        .pipe(parse({ delimiter: ',', from_line: 2 }))
+        .on('data', async function (row) {
+            // console.log(row);
+            const newItem = {
+                x: parseFloat(row[0]),
+                y: parseFloat(row[1]),
+                user_incrementing_id: parseInt(row[2]),
+            };
+            footprints.push(newItem);
+        }).on('end', function () {
+            resolve(footprints );
+          })
+          .on('error', function (error) {
+            reject(error.message);
+          });
+    });
+}
+
+newMain().then(footprints => {
     console.log(`${footprints.length} footprints received.`);
     PopulateEdges(footprints);
+    console.log(minX, minY, maxX, maxY);
     const numColors = Object.keys(players).length;
     colors = GenerateRainbowColors(numColors);
     Shuffle(colors);
@@ -193,6 +236,4 @@ function Main() {
     // Output the image as a PNG file.
     const buffer = canvas.toBuffer('image/png');
     fs.writeFileSync(filename, buffer);
-}
-
-Main();
+});
