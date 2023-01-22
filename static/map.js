@@ -143,6 +143,7 @@ function Draw() {
     mapContext.lineTo(x + 0.5 * s, y + 0.289 * s);
     mapContext.lineTo(x, y - 0.577 * s);
     mapContext.lineTo(x - 0.5 * s, y + 0.289 * s);
+    mapContext.lineTo(x + 0.5 * s, y + 0.289 * s);
     mapContext.stroke();
     }
 
