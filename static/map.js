@@ -7,6 +7,8 @@ let previousCachedDotsTime;
 // Controls how fast you zoom in and out. Higher is faster.
 const SCALE_FACTOR = 1.1;
 
+const MONUMENT_NAMES = {"monument.harbor_display_name":"Harbor","monument.harbor_2_display_name":"Harbor","monument.airfield_display_name":"Airfield","monument.excavator":"Giant Excavator Pit","monument.junkyard_display_name":"Junkyard","monument.launchsite":"Launch Site","monument.military_tunnels_display_name":"Military Tunnel","monument.power_plant_display_name":"Power Plant","monument.train_yard_display_name":"Train Yard","monument.water_treatment_plant_display_name":"Water Treatment Plant","monument.lighthouse_display_name":"Lighthouse","monument.bandit_camp":"Bandit Camp","monument.outpost":"Outpost","monument.sewer_display_name":"Sewer Branch","monument.large_oil_rig":"Large Oil Rig","monument.oil_rig_small":"Oil Rig","monument.gas_station":"Oxum's Gas Station","monument.mining_quarry_sulfur_display_name":"Sulfur Quarry","monument.mining_quarry_stone_display_name":"Stone Quarry","monument.mining_quarry_hqm_display_name":"HQM Quarry","monument.satellite_dish_display_name":"Satellite Dish","monument.dome_monument_name":"The Dome","monument.supermarket":"Abandoned Supermarket","monument.mining_outpost_display_name":"Mining Outpost","monument.swamp_c":"Abandoned Cabins","monument.water_well_a_display_name":"Water Well","monument.water_well_b_display_name":"Water Well","monument.water_well_c_display_name":"Water Well","monument.water_well_d_display_name":"Water Well","monument.water_well_e_display_name":"Water Well","monument.large_fishing_village_display_name":"Large Fishing Village","monument.fishing_village_display_name":"Fishing Village","monument.stables_a":"Ranch","monument.stables_b":"Large Barn","monument.train_tunnel_display_name":"Train Tunnel","monument.underwater_lab":"Underwater Lab","monument.AbandonedMilitaryBase":"Abandoned Military Base","monument.arctic_base_a":"Arctic Research Base","monument.hapis_convoy_display_name":"Convoy","monument.hapis_listening_station":"Listening Station","monument.hapis_sitea_display_name":"Site A","monument.hapis_siteb_display_name":"Site B","monument.hapis_eastlighthouse_display_name":"Eastern Lighthouse","monument.hapis_westlighthouse_display_name":"Western Lighthouse","monument.hapis_abandboat_display_name":"Abandoned Boat","monument.hapis_collapsed_tunnel":"Collapsed Tunnel","monument.hapis_junkpile":"Junkyard","monument.mining_quarry_display_name":"Mining Quarry","monument.hapis_quarry":"Pumping Station","monument.hapis_loadingdock_display_name":"Loading Dock","monument.hapis_ventingshaft_display_name":"Venting Shaft","monument.hapis_tugboatbeached_display_name":"Beached Tugboat","monument.hapis_refinery_refresh":"Refinery","monument.Hapis_outpost_b3":"Outpost B3"}
+
 const fullScreenButton = document.getElementById('fullscreenbutton');
 const fullScreenImg = document.getElementById('fullscreenimg');
 const mapCanvas = document.getElementById('mapcanvas');
@@ -93,93 +95,139 @@ function Draw() {
     const oy = cy + wh / 2;
     const mapSize = parseInt(info.mapSize || 4250);
 
+    function DrawMonumentName(token, x, y) {
+        mapContext.font = 'bold 8px Permanent Marker';
+        mapContext.fillStyle = 'black';
+        mapContext.textAlign = 'center';
+        if (!MONUMENT_NAMES["monument." + token]) return;
+        mapContext.fillText(MONUMENT_NAMES["monument." + token], ox + wh * x / mapSize, oy - wh * y / mapSize);
+    }
+
+    function DrawUsers(dots, oldDots, alpha, borderColor, fillColor) {
+        if (!dots) return;
+        const beforeAndAfter = {};
+        for (const dot of dots) {
+            beforeAndAfter[dot.steamId] = { after: dot };
+        }
+        if (oldDots) {
+            for (const dot of oldDots) {
+                beforeAndAfter[dot.steamId].before = dot;
+            }
+        }
+
+        const r = alpha;
+        for (const steamId in beforeAndAfter) {
+            mapContext.fillStyle = fillColor;
+            mapContext.strokeStyle = borderColor;
+            mapContext.lineWidth = 2;
+            const dot = beforeAndAfter[steamId].after;
+            const oldDot = beforeAndAfter[steamId].before;
+            const threshold = 0.001;
+            if (Math.abs(dot.x) <= threshold && Math.abs(dot.y) <= threshold) {
+                continue;
+            }
+            const x = oldDot ? r * dot.x + (1 - r) * oldDot.x : dot.x;
+            const y = oldDot ? r * dot.y + (1 - r) * oldDot.y : dot.y;
+            const px = ox + wh * x / mapSize;
+            const py = oy - wh * y / mapSize;
+            mapContext.beginPath();
+            mapContext.arc(px, py, 0.75, 0, 2 * Math.PI);
+            mapContext.stroke();
+            mapContext.fill();
+
+            mapContext.font = '4px Permanent Marker';
+            mapContext.fillStyle = 'black';
+            mapContext.textAlign = 'center';
+            if (dot.name) {
+                mapContext.fillText(dot.name, px, py - 3);
+            }
+        }
+    }
+
     function DrawDots(dots, oldDots, alpha, borderColor, fillColor) {
-    if (!dots) {
-        return;
-    }
-    const beforeAndAfter = {};
-    for (const dot of dots) {
-        beforeAndAfter[dot.steamId || dot.token] = { after: dot };
-    }
-    if (oldDots) {
-        for (const dot of oldDots) {
-        beforeAndAfter[dot.steamId].before = dot;
+        if (!dots) {
+            return;
+        }
+        const beforeAndAfter = {};
+        for (const dot of dots) {
+            if (dot.token) {
+                DrawMonumentName(dot.token, dot.x, dot.y);
+            } else {
+                beforeAndAfter[dot.steamId] = { after: dot };
+            }
+        }
+        if (oldDots) {
+            for (const dot of oldDots) {
+                beforeAndAfter[dot.steamId].before = dot;
+            }
+        }
+        mapContext.fillStyle = fillColor;
+        mapContext.strokeStyle = borderColor;
+        mapContext.lineWidth = 2;
+        const r = alpha;
+        for (const steamId in beforeAndAfter) {
+            const dot = beforeAndAfter[steamId].after;
+            const oldDot = beforeAndAfter[steamId].before;
+            const threshold = 0.001;
+            if (Math.abs(dot.x) <= threshold && Math.abs(dot.y) <= threshold) {
+                continue;
+            }
+            const x = oldDot ? r * dot.x + (1 - r) * oldDot.x : dot.x;
+            const y = oldDot ? r * dot.y + (1 - r) * oldDot.y : dot.y;
+            const px = ox + wh * x / mapSize;
+            const py = oy - wh * y / mapSize;
+            mapContext.beginPath();
+            mapContext.arc(px, py, 3, 0, 2 * Math.PI);
+            mapContext.stroke();
+            mapContext.fill();
         }
     }
-    mapContext.fillStyle = fillColor;
-    mapContext.strokeStyle = borderColor;
-    mapContext.lineWidth = 2;
-    const r = alpha;
-    for (const steamId in beforeAndAfter) {
-        const dot = beforeAndAfter[steamId].after;
-        const oldDot = beforeAndAfter[steamId].before;
-        const threshold = 0.001;
-        if (Math.abs(dot.x) <= threshold && Math.abs(dot.y) <= threshold) {
-        continue;
-        }
-        const x = oldDot ? r * dot.x + (1 - r) * oldDot.x : dot.x;
-        const y = oldDot ? r * dot.y + (1 - r) * oldDot.y : dot.y;
-        const px = ox + wh * x / mapSize;
-        const py = oy - wh * y / mapSize;
-        mapContext.beginPath();
-        mapContext.arc(px, py, 3, 0, 2 * Math.PI);
-        mapContext.stroke();
-        mapContext.fill();
-    }
+
+    function DrawMainBase(x, y) {
+        mapContext.font = '20px Permanent Marker';
+        mapContext.textAlign = 'center';
+        mapContext.fillText("⌂", x, y);
     }
 
-    function DrawSquare(x, y) {
-    const d = 6;
-    const r = d / 2;
-    mapContext.beginPath();
-    mapContext.rect(x - r, y - r, d, d);
-    mapContext.stroke();
-    }
-
-    function DrawTriangle(x, y) {
-    const s = 6;
-    mapContext.beginPath();
-    mapContext.moveTo(x - 0.5 * s, y + 0.289 * s);
-    mapContext.lineTo(x + 0.5 * s, y + 0.289 * s);
-    mapContext.lineTo(x, y - 0.577 * s);
-    mapContext.lineTo(x - 0.5 * s, y + 0.289 * s);
-    mapContext.lineTo(x + 0.5 * s, y + 0.289 * s);
-    mapContext.stroke();
+    function DrawSmallBase(x, y) {
+        mapContext.font = '12px Permanent Marker';
+        mapContext.textAlign = 'center';
+        mapContext.fillText("⌂", x, y);
     }
 
     function DrawBases(bases, borderColor, fillColor) {
-    if (!bases) {
-        return;
-    }
-    mapContext.fillStyle = fillColor;
-    mapContext.strokeStyle = borderColor;
-    mapContext.lineWidth = 2;
-    for (const base of bases) {
-        const px = ox + wh * base.x / mapSize;
-        const py = oy - wh * base.y / mapSize;
-        if (base.mainBase) {
-        DrawSquare(px, py);
-        } else {
-        DrawTriangle(px, py);
+        if (!bases) {
+            return;
         }
-    }
+        mapContext.fillStyle = fillColor;
+        mapContext.strokeStyle = borderColor;
+        mapContext.lineWidth = 2;
+        for (const base of bases) {
+            const px = ox + wh * base.x / mapSize;
+            const py = oy - wh * base.y / mapSize;
+            if (base.mainBase) {
+                DrawMainBase(px, py);
+            } else {
+                DrawSmallBase(px, py);
+            }
+        }
     }
 
     DrawDots(map.monuments, null, 1, '#db4437', 'rgba(234, 153, 153, 0.5)');
     if (cachedDots && cachedDots.bases) {
-    DrawBases(cachedDots.bases.enemies, '#FFF000', 'rgba(255, 240, 0, 0.8)');
-    DrawBases(cachedDots.bases.allies, '#00FFF0', 'rgba(0, 255, 240, 0.8)');
-    DrawBases(cachedDots.bases.team, '#00FF00', 'rgba(182, 215, 168, 0.8)');
-    DrawBases(cachedDots.bases.self, '#00FF00', 'rgba(182, 215, 168, 0.8)');
+        DrawBases(cachedDots.bases.enemies, '#FFF000', 'rgba(255, 240, 0, 0.8)');
+        DrawBases(cachedDots.bases.allies, '#00FFF0', 'rgba(0, 255, 240, 0.8)');
+        DrawBases(cachedDots.bases.team, '#00FF00', 'rgba(182, 215, 168, 0.8)');
+        DrawBases(cachedDots.bases.self, '#00FF00', 'rgba(182, 215, 168, 0.8)');
     }
     if (cachedDots && cachedDots.users) {
-    const currentTime = new Date().getTime();
-    const timeFraction = (currentTime - 1000 - previousCachedDotsTime) / (cachedDotsTime - previousCachedDotsTime);
-    const alpha = Math.max(0, Math.min(1, timeFraction));
-    const prev = (previousCachedDots || {}).users || {};
-    DrawDots(cachedDots.users.enemies, prev.enemies, alpha, '#FFF000', 'rgba(255, 240, 0, 0.8)');
-    DrawDots(cachedDots.users.allies, prev.allies, alpha, '#00FFF0', 'rgba(0, 255, 240, 0.8)');
-    DrawDots(cachedDots.users.team, prev.team, alpha, '#00FF00', 'rgba(182, 215, 168, 0.8)');
+        const currentTime = new Date().getTime();
+        const timeFraction = (currentTime - 1000 - previousCachedDotsTime) / (cachedDotsTime - previousCachedDotsTime);
+        const alpha = Math.max(0, Math.min(1, timeFraction));
+        const prev = (previousCachedDots || {}).users || {};
+        DrawUsers(cachedDots.users.enemies, prev.enemies, alpha, '#FFF000', 'rgba(255, 240, 0, 0.8)');
+        DrawUsers(cachedDots.users.allies, prev.allies, alpha, '#00FFF0', 'rgba(0, 255, 240, 0.8)');
+        DrawUsers(cachedDots.users.team, prev.team, alpha, '#00FF00', 'rgba(182, 215, 168, 0.8)');
     }
 }
 
@@ -340,6 +388,11 @@ async function setupTransforms (ctx) {
 }
 
 async function Main() {
+    new FontFace('Permanent Marker', 'url(PermanentMarker.ttf)')
+        .load().then(function(loaded_face) {
+            document.fonts.add(loaded_face);
+        }).catch(function(error) {});
+
     const response = await fetch('https://rustcult.com/mapdata', {
       credentials: 'include',
     });
