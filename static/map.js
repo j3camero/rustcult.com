@@ -156,11 +156,11 @@ function Draw() {
     function DrawBase(x, y) {
         const r = Math.floor(Math.max(1, 0.004 * wh));
         mapContext.beginPath();
-        mapContext.moveTo(x - r, y + r);
-        mapContext.lineTo(x + r, y + r);
-        mapContext.lineTo(x + r, y - r);
-        mapContext.lineTo(x, y - r - r);
-        mapContext.lineTo(x - r, y - r);
+        mapContext.moveTo(x - r, y + 1.5 * r);
+        mapContext.lineTo(x + r, y + 1.5 * r);
+        mapContext.lineTo(x + r, y);
+        mapContext.lineTo(x, y - r);
+        mapContext.lineTo(x - r, y);
         mapContext.closePath();
         mapContext.stroke();
     }
