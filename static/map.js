@@ -100,7 +100,7 @@ function Draw() {
         if (doNotRenderTheseMonuments.includes(token)) {
             return;
         }
-        mapContext.font = 'bold 4px Permanent Marker';
+        mapContext.font = 'bold 6px Permanent Marker';
         mapContext.fillStyle = 'rgba(0, 0, 0, 0.5)';
         mapContext.textAlign = 'center';
         if (!MONUMENT_NAMES["monument." + token]) return;
@@ -113,28 +113,28 @@ function Draw() {
       }
     }
 
-    function DrawUsers(dots, borderColor, fillColor) {
-        if (!dots) return;
-        for (const dot of dots) {
+    function DrawPlayers(players, borderColor, fillColor) {
+        if (!players) return;
+        for (const player of players) {
             const threshold = 0.001;
-            if (Math.abs(dot.x) <= threshold && Math.abs(dot.y) <= threshold) {
+            if (Math.abs(player.x) <= threshold && Math.abs(player.y) <= threshold) {
                 continue;
             }
-            const x = ox + wh * dot.x / mapSize;
-            const y = oy - wh * dot.y / mapSize;
+            const x = ox + wh * player.x / mapSize;
+            const y = oy - wh * player.y / mapSize;
             mapContext.fillStyle = fillColor;
             mapContext.strokeStyle = borderColor;
             mapContext.lineWidth = 1;
             mapContext.beginPath();
-            mapContext.arc(x, y, 0.75, 0, 2 * Math.PI);
+            mapContext.arc(x, y, 1, 0, 2 * Math.PI);
             mapContext.stroke();
             mapContext.fill();
 
             mapContext.font = '4px Permanent Marker';
-            mapContext.fillStyle = 'black';
+            mapContext.fillStyle = 'rgba(0, 0, 0, 0.5)';
             mapContext.textAlign = 'center';
-            if (dot.name) {
-                mapContext.fillText(dot.name, x, y - 3);
+            if (player.name) {
+                mapContext.fillText(player.name, x, y - 3);
             }
         }
     }
@@ -151,11 +151,10 @@ function Draw() {
         mapContext.stroke();
     }
 
-    function DrawBases(bases, borderColor, fillColor) {
+    function DrawBases(bases, borderColor) {
         if (!bases) {
             return;
         }
-        mapContext.fillStyle = fillColor;
         mapContext.strokeStyle = borderColor;
         mapContext.lineWidth = 1;
         for (const base of bases) {
@@ -167,15 +166,15 @@ function Draw() {
 
     DrawMonumentNames(map.monuments);
     if (cachedDots && cachedDots.bases) {
-        DrawBases(cachedDots.bases.enemies, '#FFF000', 'rgba(255, 240, 0, 0.8)');
-        DrawBases(cachedDots.bases.allies, '#00FFF0', 'rgba(0, 255, 240, 0.8)');
-        DrawBases(cachedDots.bases.team, '#00FF00', 'rgba(182, 215, 168, 0.8)');
-        DrawBases(cachedDots.bases.self, '#00FF00', 'rgba(182, 215, 168, 0.8)');
+        DrawBases(cachedDots.bases.enemies, '#FFF000');
+        DrawBases(cachedDots.bases.allies, '#00FFF0');
+        DrawBases(cachedDots.bases.team, '#00FF00');
+        DrawBases(cachedDots.bases.self, '#00FF00');
     }
     if (cachedDots && cachedDots.users) {
-        DrawUsers(cachedDots.users.enemies, '#FFF000', 'rgba(255, 240, 0, 0.8)');
-        DrawUsers(cachedDots.users.allies, '#00FFF0', 'rgba(0, 255, 240, 0.8)');
-        DrawUsers(cachedDots.users.team, '#00FF00', 'rgba(182, 215, 168, 0.8)');
+        DrawPlayers(cachedDots.users.enemies, '#FFF000', 'rgba(255, 240, 0, 0.5)');
+        DrawPlayers(cachedDots.users.allies, '#00FFF0', 'rgba(0, 255, 240, 0.5)');
+        DrawPlayers(cachedDots.users.team, '#00FF00', 'rgba(182, 215, 168, 0.5)');
     }
 }
 
