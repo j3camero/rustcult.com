@@ -5,7 +5,11 @@ let cachedDotsTime;
 let previousCachedDots;
 let previousCachedDotsTime;
 // Controls how fast you zoom in and out. Higher is faster.
-const SCALE_FACTOR = 1.1;
+let cameraOffset = {x: 0, y: 0};
+let cameraZoom = 1
+let MAX_ZOOM = 5
+let MIN_ZOOM = 0.1
+let SCROLL_SENSITIVITY = -0.004
 
 const MONUMENT_NAMES = {"monument.harbor_display_name":"Harbor","monument.harbor_2_display_name":"Harbor","monument.airfield_display_name":"Airfield","monument.excavator":"Giant Excavator Pit","monument.junkyard_display_name":"Junkyard","monument.launchsite":"Launch Site","monument.military_tunnels_display_name":"Military Tunnel","monument.power_plant_display_name":"Power Plant","monument.train_yard_display_name":"Train Yard","monument.water_treatment_plant_display_name":"Water Treatment Plant","monument.lighthouse_display_name":"Lighthouse","monument.bandit_camp":"Bandit Camp","monument.outpost":"Outpost","monument.sewer_display_name":"Sewer Branch","monument.large_oil_rig":"Large Oil Rig","monument.oil_rig_small":"Oil Rig","monument.gas_station":"Oxum's Gas Station","monument.mining_quarry_sulfur_display_name":"Sulfur Quarry","monument.mining_quarry_stone_display_name":"Stone Quarry","monument.mining_quarry_hqm_display_name":"HQM Quarry","monument.satellite_dish_display_name":"Satellite Dish","monument.dome_monument_name":"The Dome","monument.supermarket":"Abandoned Supermarket","monument.mining_outpost_display_name":"Mining Outpost","monument.swamp_c":"Abandoned Cabins","monument.water_well_a_display_name":"Water Well","monument.water_well_b_display_name":"Water Well","monument.water_well_c_display_name":"Water Well","monument.water_well_d_display_name":"Water Well","monument.water_well_e_display_name":"Water Well","monument.large_fishing_village_display_name":"Large Fishing Village","monument.fishing_village_display_name":"Fishing Village","monument.stables_a":"Ranch","monument.stables_b":"Large Barn","monument.train_tunnel_display_name":"Train Tunnel","monument.underwater_lab":"Underwater Lab","monument.AbandonedMilitaryBase":"Abandoned Military Base","monument.arctic_base_a":"Arctic Research Base","monument.hapis_convoy_display_name":"Convoy","monument.hapis_listening_station":"Listening Station","monument.hapis_sitea_display_name":"Site A","monument.hapis_siteb_display_name":"Site B","monument.hapis_eastlighthouse_display_name":"Eastern Lighthouse","monument.hapis_westlighthouse_display_name":"Western Lighthouse","monument.hapis_abandboat_display_name":"Abandoned Boat","monument.hapis_collapsed_tunnel":"Collapsed Tunnel","monument.hapis_junkpile":"Junkyard","monument.mining_quarry_display_name":"Mining Quarry","monument.hapis_quarry":"Pumping Station","monument.hapis_loadingdock_display_name":"Loading Dock","monument.hapis_ventingshaft_display_name":"Venting Shaft","monument.hapis_tugboatbeached_display_name":"Beached Tugboat","monument.hapis_refinery_refresh":"Refinery","monument.Hapis_outpost_b3":"Outpost B3"}
 const doNotRenderTheseMonuments = ['train_tunnel_display_name'];
@@ -69,11 +73,25 @@ function Sleep(ms) {
     });
 }
 
+function HandlePanAndZoom() {
+
+    mapCanvas.width = window.innerWidth;
+    mapCanvas.height = window.innerHeight;
+    document.body.style.backgroundColor = cachedMapData.map.background;
+
+    mapContext.translate( window.innerWidth / 2, window.innerHeight / 2 );
+    mapContext.scale(cameraZoom, cameraZoom);
+    mapContext.translate( -window.innerWidth / 2 + cameraOffset.x, -window.innerHeight / 2 + cameraOffset.y );
+}
+
 function Draw() {
     if (!cachedMapData) {
-    console.log('No cached map data. Bailing.');
-    return;
+        console.log('No cached map data. Bailing.');
+        return;
     }
+
+    HandlePanAndZoom();
+
     const map = cachedMapData.map;
     const info = cachedMapData.info;
     mapContext.fillStyle = map.background;
@@ -227,132 +245,86 @@ async function DoFrame() {
     setTimeout(DoFrame, 10);
 }
 
-async function trackTransforms(ctx){
-    const svg = document.createElementNS("http://www.w3.org/2000/svg",'svg');
-    let SVGMatrix = svg.createSVGMatrix();
-    ctx.getTransform = function(){ return SVGMatrix; };
-
-    const savedTransforms = [];
-    const save = ctx.save;
-    ctx.save = function(){
-        savedTransforms.push(SVGMatrix.translate(0,0));
-        return save.call(ctx);
-    };
-
-    const restore = ctx.restore;
-    ctx.restore = function(){
-        SVGMatrix = savedTransforms.pop();
-        return restore.call(ctx);
-    };
-
-    const scale = ctx.scale;
-    ctx.scale = function(sx,sy){
-        SVGMatrix = SVGMatrix.scaleNonUniform(sx,sy);
-        return scale.call(ctx,sx,sy);
-    };
-
-    const rotate = ctx.rotate;
-    ctx.rotate = function(radians){
-        SVGMatrix = SVGMatrix.rotate(radians*180/Math.PI);
-        return rotate.call(ctx,radians);
-    };
-
-    const translate = ctx.translate;
-    ctx.translate = function(dx,dy){
-        SVGMatrix = SVGMatrix.translate(dx,dy);
-        return translate.call(ctx,dx,dy);
-    };
-
-    const transform = ctx.transform;
-    ctx.transform = function(a,b,c,d,e,f){
-        const m2 = svg.createSVGMatrix();
-        m2.a=a; m2.b=b; m2.c=c; m2.d=d; m2.e=e; m2.f=f;
-        SVGMatrix = SVGMatrix.multiply(m2);
-        return transform.call(ctx,a,b,c,d,e,f);
-    };
-
-    const setTransform = ctx.setTransform;
-    ctx.setTransform = function(a,b,c,d,e,f){
-        SVGMatrix.a = a;
-        SVGMatrix.b = b;
-        SVGMatrix.c = c;
-        SVGMatrix.d = d;
-        SVGMatrix.e = e;
-        SVGMatrix.f = f;
-        return setTransform.call(ctx,a,b,c,d,e,f);
-    };
-
-    const pt = svg.createSVGPoint();
-    ctx.transformedPoint = function(x,y){
-        pt.x=x; pt.y=y;
-        return pt.matrixTransform(SVGMatrix.inverse());
-    }
-}
-
-function redrawWithTransform(){
-
-    // Clear the entire canvas
-    const topLeft = mapContext.transformedPoint(0,0);
-    const bottomRight = mapContext.transformedPoint(mapCanvas.width,mapCanvas.height);
-    mapContext.fillStyle = cachedMapData.map.background;
-    mapContext.fillRect(topLeft.x,topLeft.y,bottomRight.x-topLeft.x,bottomRight.y-topLeft.y);
-
-    mapContext.save();
-    mapContext.setTransform(1,0,0,1,0,0);
-    mapContext.fillRect(0,0,mapCanvas.width,mapCanvas.height);
-    mapContext.restore();
-
-    mapContext.drawImage(mapCanvas,0,0);
-    Draw();
-}
-
-async function setupTransforms (ctx) {
-    await trackTransforms(ctx);
-
-    let lastX = mapCanvas.width / 2, lastY = mapCanvas.height / 2;
-    let dragStart, dragged;
-
-    mapCanvas.addEventListener('mousedown', function (evt) {
-        document.body.style.mozUserSelect = document.body.style.webkitUserSelect = document.body.style.userSelect = 'none';
-        lastX = evt.offsetX || (evt.pageX - mapCanvas.offsetLeft);
-        lastY = evt.offsetY || (evt.pageY - mapCanvas.offsetTop);
-        dragStart = mapContext.transformedPoint(lastX, lastY);
-        dragged = false;
-    }, false);
-
-    mapCanvas.addEventListener('mousemove', function (evt) {
-        lastX = evt.offsetX || (evt.pageX - mapCanvas.offsetLeft);
-        lastY = evt.offsetY || (evt.pageY - mapCanvas.offsetTop);
-        dragged = true;
-        if (dragStart) {
-            const pt = mapContext.transformedPoint(lastX, lastY);
-            mapContext.translate(pt.x - dragStart.x, pt.y - dragStart.y);
-            redrawWithTransform();
+async function setupTransforms() {
+    function getEventLocation(e) {
+        if (e.touches && e.touches.length == 1) {
+            return { x:e.touches[0].clientX, y: e.touches[0].clientY }
+        } else if (e.clientX && e.clientY) {
+            return { x: e.clientX, y: e.clientY }
         }
-    }, false);
-
-    mapCanvas.addEventListener('mouseup', function (evt) {
-        dragStart = null;
-        if (!dragged) zoom(evt.shiftKey ? -1 : 1);
-    }, false);
-
-    const zoom = function (clicks) {
-        const pt = mapContext.transformedPoint(lastX, lastY);
-        mapContext.translate(pt.x, pt.y);
-        const factor = Math.pow(SCALE_FACTOR, clicks);
-        mapContext.scale(factor, factor);
-        mapContext.translate(-pt.x, -pt.y);
-        redrawWithTransform();
     }
 
-    const handleScroll = function (evt) {
-        const delta = evt.wheelDelta ? evt.wheelDelta / 40 : evt.detail ? -evt.detail : 0;
-        if (delta) zoom(delta);
-        return evt.preventDefault() && false;
-    };
+    let isDragging = false
+    let dragStart = { x: 0, y: 0 }
 
-    mapCanvas.addEventListener('DOMMouseScroll', handleScroll, false);
-    mapCanvas.addEventListener('mousewheel', handleScroll, false);
+    function onPointerDown(e) {
+        isDragging = true
+        dragStart.x = getEventLocation(e).x/cameraZoom - cameraOffset.x
+        dragStart.y = getEventLocation(e).y/cameraZoom - cameraOffset.y
+    }
+
+    function onPointerUp(e) {
+        isDragging = false
+        initialPinchDistance = null
+        lastZoom = cameraZoom
+    }
+
+    function onPointerMove(e) {
+        if (isDragging) {
+            cameraOffset.x = getEventLocation(e).x/cameraZoom - dragStart.x
+            cameraOffset.y = getEventLocation(e).y/cameraZoom - dragStart.y
+        }
+    }
+
+    function handleTouch(e, singleTouchHandler) {
+        if ( e.touches.length == 1 ) {
+            singleTouchHandler(e)
+        } else if (e.type == "touchmove" && e.touches.length == 2) {
+            isDragging = false
+            handlePinch(e)
+        }
+    }
+
+    let initialPinchDistance = null
+    let lastZoom = cameraZoom
+
+    function handlePinch(e) {
+        e.preventDefault()
+
+        let touch1 = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+        let touch2 = { x: e.touches[1].clientX, y: e.touches[1].clientY }
+
+        // This is distance squared, but no need for an expensive sqrt as it's only used in ratio
+        let currentDistance = (touch1.x - touch2.x)**2 + (touch1.y - touch2.y)**2
+
+        if (initialPinchDistance == null) {
+            initialPinchDistance = currentDistance
+        } else {
+            adjustZoom( null, currentDistance/initialPinchDistance )
+        }
+    }
+
+    function adjustZoom(zoomAmount, zoomFactor) {
+        if (!isDragging) {
+            if (zoomAmount) {
+                cameraZoom += zoomAmount
+            } else if (zoomFactor) {
+                console.log(zoomFactor)
+                cameraZoom = zoomFactor*lastZoom
+            }
+
+            cameraZoom = Math.min( cameraZoom, MAX_ZOOM )
+            cameraZoom = Math.max( cameraZoom, MIN_ZOOM )
+        }
+    }
+
+    mapCanvas.addEventListener('mousedown', onPointerDown)
+    mapCanvas.addEventListener('touchstart', (e) => handleTouch(e, onPointerDown))
+    mapCanvas.addEventListener('mouseup', onPointerUp)
+    mapCanvas.addEventListener('touchend',  (e) => handleTouch(e, onPointerUp))
+    mapCanvas.addEventListener('mousemove', onPointerMove)
+    mapCanvas.addEventListener('touchmove', (e) => handleTouch(e, onPointerMove))
+    mapCanvas.addEventListener( 'wheel', (e) => adjustZoom(e.deltaY*SCROLL_SENSITIVITY))
 }
 
 async function Main() {
@@ -373,7 +345,7 @@ async function Main() {
     OnResize();
     await PeriodicUpdateForDotsData();
     await DoFrame();
-    await setupTransforms(mapContext);
+    await setupTransforms();
 }
 
 Main();
