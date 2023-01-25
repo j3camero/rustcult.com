@@ -100,8 +100,9 @@ function Draw() {
         if (doNotRenderTheseMonuments.includes(token)) {
             return;
         }
-        mapContext.font = 'bold 6px Permanent Marker';
-        mapContext.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        const fontSize = Math.floor(Math.max(1, 0.009 * wh));
+        mapContext.font = `bold ${fontSize}px Permanent Marker`;
+        mapContext.fillStyle = 'rgba(0, 0, 0, 0.6)';
         mapContext.textAlign = 'center';
         if (!MONUMENT_NAMES["monument." + token]) return;
         mapContext.fillText(MONUMENT_NAMES["monument." + token], ox + wh * x / mapSize, oy - wh * y / mapSize);
@@ -124,23 +125,36 @@ function Draw() {
             const y = oy - wh * player.y / mapSize;
             mapContext.fillStyle = fillColor;
             mapContext.strokeStyle = borderColor;
-            mapContext.lineWidth = 1;
+            mapContext.lineWidth = 0.0015 * wh;
             mapContext.beginPath();
-            mapContext.arc(x, y, 1, 0, 2 * Math.PI);
+            mapContext.arc(x, y, 0.003 * wh, 0, 2 * Math.PI);
             mapContext.stroke();
             mapContext.fill();
+        }
+    }
 
-            mapContext.font = '4px Permanent Marker';
-            mapContext.fillStyle = 'rgba(0, 0, 0, 0.5)';
-            mapContext.textAlign = 'center';
-            if (player.name) {
-                mapContext.fillText(player.name, x, y - 3);
+    function DrawPlayerNames(players) {
+        if (!players) return;
+        for (const player of players) {
+            if (!player.name) {
+                continue;
             }
+            const threshold = 0.001;
+            if (Math.abs(player.x) <= threshold && Math.abs(player.y) <= threshold) {
+                continue;
+            }
+            const x = ox + wh * player.x / mapSize;
+            const y = oy - wh * player.y / mapSize;
+            const fontSize = Math.floor(Math.max(1, 0.006 * wh));
+            mapContext.font = `${fontSize}px Permanent Marker`;
+            mapContext.fillStyle = 'rgba(0, 0, 0, 0.6)';
+            mapContext.textAlign = 'center';
+            mapContext.fillText(player.name, x, y - 0.005 * wh);
         }
     }
 
     function DrawBase(x, y) {
-        const r = 2;
+        const r = Math.floor(Math.max(1, 0.004 * wh));
         mapContext.beginPath();
         mapContext.moveTo(x - r, y + r);
         mapContext.lineTo(x + r, y + r);
@@ -156,11 +170,11 @@ function Draw() {
             return;
         }
         mapContext.strokeStyle = borderColor;
-        mapContext.lineWidth = 1;
+        mapContext.lineWidth = 0.0015 * wh;
         for (const base of bases) {
-            const px = ox + wh * base.x / mapSize;
-            const py = oy - wh * base.y / mapSize;
-            DrawBase(px, py);
+            const x = ox + wh * base.x / mapSize;
+            const y = oy - wh * base.y / mapSize;
+            DrawBase(x, y);
         }
     }
 
@@ -172,9 +186,12 @@ function Draw() {
         DrawBases(cachedDots.bases.self, '#00FF00');
     }
     if (cachedDots && cachedDots.users) {
-        DrawPlayers(cachedDots.users.enemies, '#FFF000', 'rgba(255, 240, 0, 0.5)');
-        DrawPlayers(cachedDots.users.allies, '#00FFF0', 'rgba(0, 255, 240, 0.5)');
-        DrawPlayers(cachedDots.users.team, '#00FF00', 'rgba(182, 215, 168, 0.5)');
+        DrawPlayerNames(cachedDots.users.enemies);
+        DrawPlayerNames(cachedDots.users.allies);
+        DrawPlayerNames(cachedDots.users.team);
+        DrawPlayers(cachedDots.users.enemies, '#FFF000', 'rgba(255, 240, 0, 0.3)');
+        DrawPlayers(cachedDots.users.allies, '#00FFF0', 'rgba(0, 255, 240, 0.3)');
+        DrawPlayers(cachedDots.users.team, '#00FF00', 'rgba(182, 215, 168, 0.3)');
     }
 }
 
