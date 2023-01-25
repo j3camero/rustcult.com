@@ -119,7 +119,7 @@ function Draw() {
         for (const steamId in beforeAndAfter) {
             mapContext.fillStyle = fillColor;
             mapContext.strokeStyle = borderColor;
-            mapContext.lineWidth = 2;
+            mapContext.lineWidth = 1;
             const dot = beforeAndAfter[steamId].after;
             const oldDot = beforeAndAfter[steamId].before;
             const threshold = 0.001;
@@ -183,16 +183,16 @@ function Draw() {
         }
     }
 
-    function DrawMainBase(x, y) {
-        mapContext.font = '20px Permanent Marker';
-        mapContext.textAlign = 'center';
-        mapContext.fillText("⌂", x, y);
-    }
-
-    function DrawSmallBase(x, y) {
-        mapContext.font = '12px Permanent Marker';
-        mapContext.textAlign = 'center';
-        mapContext.fillText("⌂", x, y);
+    function DrawBase(x, y) {
+        const r = 2;
+        mapContext.beginPath();
+        mapContext.moveTo(x - r, y + r);
+        mapContext.lineTo(x + r, y + r);
+        mapContext.lineTo(x + r, y - r);
+        mapContext.lineTo(x, y - r - r);
+        mapContext.lineTo(x - r, y - r);
+        mapContext.closePath();
+        mapContext.stroke();
     }
 
     function DrawBases(bases, borderColor, fillColor) {
@@ -201,15 +201,11 @@ function Draw() {
         }
         mapContext.fillStyle = fillColor;
         mapContext.strokeStyle = borderColor;
-        mapContext.lineWidth = 2;
+        mapContext.lineWidth = 1;
         for (const base of bases) {
             const px = ox + wh * base.x / mapSize;
             const py = oy - wh * base.y / mapSize;
-            if (base.mainBase) {
-                DrawMainBase(px, py);
-            } else {
-                DrawSmallBase(px, py);
-            }
+            DrawBase(px, py);
         }
     }
 
