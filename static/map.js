@@ -87,7 +87,7 @@ function HandlePanAndZoom() {
     // If cameraZoom is within 0.2 of 1, then draw the map info.
     // Otherwise, hide it.
 
-    if (cameraZoom > 1.2) {
+    if (cameraZoom > 1.3) {
         document.getElementById("mapInfo").style.display = "none";
     } else {
         document.getElementById("mapInfo").style.display = "block";
