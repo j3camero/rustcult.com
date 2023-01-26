@@ -6,6 +6,28 @@
     <meta http-equiv="refresh" content="3600">
   </head>
   <body>
+
+  <!-- Loading animation, https://codepen.io/jackrugile/pen/JddmaX -->
+  <div class="loader" id="loader">
+      <div class="loader-inner">
+          <div class="loader-line-wrap">
+              <div class="loader-line"></div>
+          </div>
+          <div class="loader-line-wrap">
+              <div class="loader-line"></div>
+          </div>
+          <div class="loader-line-wrap">
+              <div class="loader-line"></div>
+          </div>
+          <div class="loader-line-wrap">
+              <div class="loader-line"></div>
+          </div>
+          <div class="loader-line-wrap">
+              <div class="loader-line"></div>
+          </div>
+      </div>
+  </div>
+
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-QFW71XJ8MX"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -16,13 +38,16 @@
     <canvas id="mapcanvas"></canvas>
     <div id="menu">
       <a href="/servers">
-	<img alt="Go to the server list"
-	     class="menubutton"
-	     onmouseover="hover(this);"
-	     onmouseout="unhover(this);"
-	     src="Hamburger-Icon-White-Transparent.png"
-	     />
+        <img alt="Go to the server list"
+             class="menubutton"
+             onmouseover="hover(this);"
+             onmouseout="unhover(this);"
+             src="Hamburger-Icon-White-Transparent.png"/>
       </a>
+      <div id="mapInfo">
+          <p class="mapname" id="serverinfotag"></p>
+          <p class="mappop" id="serverpop"></p>
+      </div>
     </div>
     <div id="fullscreen">
       <a href="#" id="fullscreenbutton">

@@ -7,8 +7,8 @@ let previousCachedDotsTime;
 // Controls how fast you zoom in and out. Higher is faster.
 let cameraOffset = {x: 0, y: 0};
 let cameraZoom = 1
-let MAX_ZOOM = 5
-let MIN_ZOOM = 0.1
+let MAX_ZOOM = 6
+let MIN_ZOOM = 0.8
 let SCROLL_SENSITIVITY = -0.004
 
 const MONUMENT_NAMES = {"monument.harbor_display_name":"Harbor","monument.harbor_2_display_name":"Harbor","monument.airfield_display_name":"Airfield","monument.excavator":"Giant Excavator Pit","monument.junkyard_display_name":"Junkyard","monument.launchsite":"Launch Site","monument.military_tunnels_display_name":"Military Tunnel","monument.power_plant_display_name":"Power Plant","monument.train_yard_display_name":"Train Yard","monument.water_treatment_plant_display_name":"Water Treatment Plant","monument.lighthouse_display_name":"Lighthouse","monument.bandit_camp":"Bandit Camp","monument.outpost":"Outpost","monument.sewer_display_name":"Sewer Branch","monument.large_oil_rig":"Large Oil Rig","monument.oil_rig_small":"Oil Rig","monument.gas_station":"Oxum's Gas Station","monument.mining_quarry_sulfur_display_name":"Sulfur Quarry","monument.mining_quarry_stone_display_name":"Stone Quarry","monument.mining_quarry_hqm_display_name":"HQM Quarry","monument.satellite_dish_display_name":"Satellite Dish","monument.dome_monument_name":"The Dome","monument.supermarket":"Abandoned Supermarket","monument.mining_outpost_display_name":"Mining Outpost","monument.swamp_c":"Abandoned Cabins","monument.water_well_a_display_name":"Water Well","monument.water_well_b_display_name":"Water Well","monument.water_well_c_display_name":"Water Well","monument.water_well_d_display_name":"Water Well","monument.water_well_e_display_name":"Water Well","monument.large_fishing_village_display_name":"Large Fishing Village","monument.fishing_village_display_name":"Fishing Village","monument.stables_a":"Ranch","monument.stables_b":"Large Barn","monument.train_tunnel_display_name":"Train Tunnel","monument.underwater_lab":"Underwater Lab","monument.AbandonedMilitaryBase":"Abandoned Military Base","monument.arctic_base_a":"Arctic Research Base","monument.hapis_convoy_display_name":"Convoy","monument.hapis_listening_station":"Listening Station","monument.hapis_sitea_display_name":"Site A","monument.hapis_siteb_display_name":"Site B","monument.hapis_eastlighthouse_display_name":"Eastern Lighthouse","monument.hapis_westlighthouse_display_name":"Western Lighthouse","monument.hapis_abandboat_display_name":"Abandoned Boat","monument.hapis_collapsed_tunnel":"Collapsed Tunnel","monument.hapis_junkpile":"Junkyard","monument.mining_quarry_display_name":"Mining Quarry","monument.hapis_quarry":"Pumping Station","monument.hapis_loadingdock_display_name":"Loading Dock","monument.hapis_ventingshaft_display_name":"Venting Shaft","monument.hapis_tugboatbeached_display_name":"Beached Tugboat","monument.hapis_refinery_refresh":"Refinery","monument.Hapis_outpost_b3":"Outpost B3"}
@@ -82,6 +82,16 @@ function HandlePanAndZoom() {
     mapContext.translate( window.innerWidth / 2, window.innerHeight / 2 );
     mapContext.scale(cameraZoom, cameraZoom);
     mapContext.translate( -window.innerWidth / 2 + cameraOffset.x, -window.innerHeight / 2 + cameraOffset.y );
+
+    // Hide the map info if zoomed in too far.
+    // If cameraZoom is within 0.2 of 1, then draw the map info.
+    // Otherwise, hide it.
+
+    if (cameraZoom > 1.5) {
+        document.getElementById("mapInfo").style.display = "none";
+    } else {
+        document.getElementById("mapInfo").style.display = "block";
+    }
 }
 
 function Draw() {
@@ -327,6 +337,30 @@ async function setupTransforms() {
     mapCanvas.addEventListener( 'wheel', (e) => adjustZoom(e.deltaY*SCROLL_SENSITIVITY))
 }
 
+async function setServerInfo(mapData) {
+    let serverInfo = document.getElementById('serverinfotag');
+    // Set the font of the text to the font we loaded
+    serverInfo.innerHTML = mapData.info.name;
+    let pop = document.getElementById("serverpop")
+    let data = mapData.info.players + " / " + mapData.info.maxPlayers;
+    if (mapData.info.queuedPlayers === 0) {
+        pop.innerHTML = data;
+    } else {
+        pop.innerHTML = data + " (" + mapData.info.queuedPlayers + " queued)";
+    }
+
+}
+
+async function removeLoadingScreen() {
+    let loadingScreen = document.getElementById('loader');
+    loadingScreen.classList.add('fade-in');
+    // 1.5 seconds after the animation is done, remove the element from the DOM
+    setTimeout(function() {
+        loadingScreen.style.display = 'none';
+        loadingScreen.remove();
+    }, 1450);
+}
+
 async function Main() {
     new FontFace('Permanent Marker', 'url(PermanentMarker.ttf)')
         .load().then(function(loaded_face) {
@@ -343,9 +377,11 @@ async function Main() {
     mapImageTag.src = 'data:image/png;base64, ' + mapData.map.jpgImage;
     await Sleep(100);
     OnResize();
+    await setServerInfo(mapData);
     await PeriodicUpdateForDotsData();
     await DoFrame();
     await setupTransforms();
+    await removeLoadingScreen();
 }
 
 Main();
