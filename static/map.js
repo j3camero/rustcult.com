@@ -82,6 +82,16 @@ function HandlePanAndZoom() {
     mapContext.translate( window.innerWidth / 2, window.innerHeight / 2 );
     mapContext.scale(cameraZoom, cameraZoom);
     mapContext.translate( -window.innerWidth / 2 + cameraOffset.x, -window.innerHeight / 2 + cameraOffset.y );
+
+    // Hide the map info if zoomed in too far.
+    // If cameraZoom is within 0.2 of 1, then draw the map info.
+    // Otherwise, hide it.
+
+    if (cameraZoom > 1.2) {
+        document.getElementById("mapInfo").style.display = "none";
+    } else {
+        document.getElementById("mapInfo").style.display = "block";
+    }
 }
 
 function Draw() {
@@ -327,6 +337,30 @@ async function setupTransforms() {
     mapCanvas.addEventListener( 'wheel', (e) => adjustZoom(e.deltaY*SCROLL_SENSITIVITY))
 }
 
+async function setServerInfo(mapData) {
+    let serverInfo = document.getElementById('serverinfotag');
+    // Set the font of the text to the font we loaded
+    serverInfo.innerHTML = mapData.info.name;
+    let pop = document.getElementById("serverpop")
+    let data = mapData.info.players + " / " + mapData.info.maxPlayers;
+    if (mapData.info.queuedPlayers === 0) {
+        pop.innerHTML = data;
+    } else {
+        pop.innerHTML = data + " (" + mapData.info.queuedPlayers + " queued)";
+    }
+
+}
+
+async function removeLoadingScreen() {
+    let loadingScreen = document.getElementById('loader');
+    loadingScreen.classList.add('fade-in');
+    // 1.5 seconds after the animation is done, remove the element from the DOM
+    setTimeout(function() {
+        loadingScreen.style.display = 'none';
+        loadingScreen.remove();
+    }, 1450);
+}
+
 async function Main() {
     new FontFace('Permanent Marker', 'url(PermanentMarker.ttf)')
         .load().then(function(loaded_face) {
@@ -343,9 +377,11 @@ async function Main() {
     mapImageTag.src = 'data:image/png;base64, ' + mapData.map.jpgImage;
     await Sleep(100);
     OnResize();
+    await setServerInfo(mapData);
     await PeriodicUpdateForDotsData();
     await DoFrame();
     await setupTransforms();
+    await removeLoadingScreen();
 }
 
 Main();
