@@ -157,6 +157,9 @@ function Draw() {
     function DrawPlayers(players, borderColor, fillColor) {
         if (!players) return;
         for (const player of players) {
+	    if (!player || !player.isAlive || !player.isOnline) {
+		continue;
+	    }
             if (IsCloseToOrigin(player)) {
                 continue;
             }
@@ -174,7 +177,11 @@ function Draw() {
     function DrawPlayerNames(players) {
         if (!players) return;
         for (const player of players) {
-            if (!player.name || IsCloseToOrigin(player)) {
+            if (!player ||
+		!player.isOnline ||
+		!player.isAlive ||
+		!player.name ||
+		IsCloseToOrigin(player)) {
                 continue;
             }
             const x = ox + wh * player.x / mapSize;
