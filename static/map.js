@@ -157,7 +157,7 @@ function Draw() {
     function DrawPlayers(players, borderColor, fillColor) {
         if (!players) return;
         for (const player of players) {
-	    if (!player || !player.isAlive || !player.isOnline) {
+	    if (!player || !player.isAlive) {
 		continue;
 	    }
             if (IsCloseToOrigin(player)) {
