@@ -1,7 +1,7 @@
 @charset "utf-8";
 
 body{
-    background-image: linear-gradient(to right, rgb(172, 10, 10) , rgb(187, 187, 187));
+    background-image: linear-gradient(to right, #F8B195 , #F67290);
     color: #F6EDE3;
     font-family: Century Gothic, CenturyGothic, AppleGothic, sans-serif;
 }
@@ -11,6 +11,35 @@ h3{
 }
 
 #stepslogin{
-    border: 5px solid grey;
+    border: 5px solid white;
     border-radius: 8px;
+    background-image: linear-gradient(to right, #355C7D, rgb(209, 203, 203) );
+    box-shadow: 6px 6px 10px black;
+    padding: 10px;
+    margin-right: 70%;
 }
+
+#discord_section{
+    border: 5px solid white;
+    border-radius: 8px;
+    background-image: linear-gradient(to right, #6C5B7B, rgb(209, 203, 203) ) ;
+    box-shadow: 6px 6px 10px black;
+    padding: 5px;
+    margin-right: 50%;
+}
+
+#logout_section{
+    border: 5px solid white;
+    border-radius: 8px;
+    background-image: linear-gradient(to right, #C06C84, rgb(209, 203, 203) );
+    box-shadow: 6px 6px 10px black;
+    padding: 5px;
+    margin-right: 85%;
+}
+
+a{
+    color: rgb(255, 255, 255);
+}
+
+
+
