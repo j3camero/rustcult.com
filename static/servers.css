@@ -9,3 +9,8 @@ body{
 h3{
     font-size: 1.5em;
 }
+
+#stepslogin{
+    border: 5px solid grey;
+    border-radius: 8px;
+}
