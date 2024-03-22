@@ -1,45 +1,51 @@
 @charset "utf-8";
 
-body{
-    background-image: linear-gradient(to right, #F8B195 , #F67290);
-    color: #F6EDE3;
+body {
+    background-image: linear-gradient(to right, #f8b195, #f67290);
+    color: #f6ede3;
     font-family: Century Gothic, CenturyGothic, AppleGothic, sans-serif;
 }
 
-h3{
+h3 {
     font-size: 1.5em;
 }
 
-#stepslogin{
+#stepslogin {
     border: 5px solid white;
     border-radius: 8px;
-    background-image: linear-gradient(to right, #355C7D, rgb(211, 209, 209) );
+    background-image: linear-gradient(to right, #355c7d, rgb(211, 209, 209));
     box-shadow: 6px 6px 10px black;
     padding: 10px;
     margin-right: 70%;
 }
 
-#discord_section{
+#discord_section {
     border: 5px solid white;
     border-radius: 8px;
-    background-image: linear-gradient(to right, #6C5B7B, rgb(170, 169, 169) ) ;
+    background-image: linear-gradient(to right, #6c5b7b, rgb(170, 169, 169));
     box-shadow: 6px 6px 10px black;
     padding: 5px;
     margin-right: 50%;
 }
 
-#logout_section{
+#logout_section {
     border: 5px solid white;
     border-radius: 8px;
-    background-image: linear-gradient(to right, #C06C84, rgb(187, 184, 184) );
+    background-image: linear-gradient(to right, #c06c84, rgb(187, 184, 184));
     box-shadow: 6px 6px 10px black;
     padding: 5px;
     margin-right: 85%;
 }
 
-a{
+a {
     color: rgb(255, 255, 255);
 }
 
-
-
+@media screen and (max-width: 1200px) {
+    #stepslogin,
+    #discord_section,
+    #logout_section {
+        padding-right: 50%;
+        margin-right: 15%;
+    }
+}
